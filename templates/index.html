@@ -14,6 +14,9 @@
 
     <div class="result" id="result"></div>
 
+    <div class="section-title">Проверяемый текст с подсветкой неуникальных фраз:</div>
+    <div id="highlighted-text"></div>
+
     <script>
       async function checkText() {
         const text = document.getElementById('text-input').value.trim()
@@ -23,6 +26,7 @@
         }
 
         document.getElementById('result').innerHTML = '⏳ Проверка...'
+        document.getElementById('highlighted-text').innerHTML = ''
 
         try {
           const res = await fetch('/check', {
@@ -41,6 +45,18 @@
           })
           html += '</ul>'
           document.getElementById('result').innerHTML = html
+
+          let highlighted = text
+          data.details
+            .filter((item) => item.results > 0)
+            .sort((a, b) => b.phrase.length - a.phrase.length)
+            .forEach((item) => {
+              const escaped = item.phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              const re = new RegExp(escaped, 'g')
+              highlighted = highlighted.replace(re, `<span class="highlight">${item.phrase}</span>`)
+            })
+
+          document.getElementById('highlighted-text').innerHTML = highlighted
         } catch (error) {
           console.error(error)
           document.getElementById('result').innerHTML = '⚠️ Ошибка при проверке. Попробуйте позже.'
