@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Проверка уникальности текста</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <h1>Проверка уникальности текста</h1>
+
+    <textarea id="text-input" placeholder="Введите или вставьте ваш текст..."></textarea><br />
+    <button onclick="checkText()">Проверить</button>
+
+    <div class="result" id="result"></div>
+
+    <script>
+      async function checkText() {
+        const text = document.getElementById('text-input').value.trim()
+        if (!text) {
+          alert('Пожалуйста, введите текст для проверки.')
+          return
+        }
+
+        document.getElementById('result').innerHTML = '⏳ Проверка...'
+
+        try {
+          const res = await fetch('/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          })
+
+          const data = await res.json()
+
+          let html = `<h3>Уникальность: ${data.uniqueness}%</h3>`
+          html += '<ul>'
+          data.details.forEach((item) => {
+            const color = item.results == 0 ? 'green' : 'red'
+            html += `<li><span style="color:${color}">"${item.phrase}"</span> — найдено: ${item.results}</li>`
+          })
+          html += '</ul>'
+          document.getElementById('result').innerHTML = html
+        } catch (error) {
+          console.error(error)
+          document.getElementById('result').innerHTML = '⚠️ Ошибка при проверке. Попробуйте позже.'
+        }
+      }
+    </script>
+  </body>
+</html>
